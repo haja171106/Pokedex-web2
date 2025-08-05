@@ -95,10 +95,10 @@ function Pokedex() {
   if (loading) return <p className="text-center mt-4">Chargement des Pokémon...</p>;
 
   return (
-    <div className="p-4">
+    <div className="w-full bg-gradient-to-tr from-red-500 via-yellow-500 to-blue-500">
       <h2 className="text-2xl font-bold mb-4 text-center">Pokédex</h2>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-4 justify-center">
+      <div className="flex flex-col items-center gap-4 mb-4 justify-center ">
         <input
           type="text"
           placeholder="Rechercher un Pokémon..."
@@ -113,7 +113,7 @@ function Pokedex() {
         >
           Tri: {sortModes[sortIndex].label}
         </button>
-    <div className="flex flex-wrap justify-center gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
   {currentItems.map(pokemon => (
     <Link
       to={`/pokemon/${pokemon.name}`}

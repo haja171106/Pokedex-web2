@@ -25,7 +25,7 @@ function PokemonCard({ pokemon }) {
   return (
     <div
       style={{ background: color[pokemon.type] || '#ddd' }}
-      className="rounded-xl p-4 text-center text-white w-32 shadow-md"
+      className="rounded-xl p-4 text-center text-neutral-950 w-32 shadow-md"
     >
       <img src={pokemon.image} alt={pokemon.name} className="mx-auto" />
       <h4 className="capitalize text-lg">{pokemon.name}</h4>
