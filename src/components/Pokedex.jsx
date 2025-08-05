@@ -1,50 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import PokemonCard from "./PokemonCard";
 import Pagination from "./Pagination";
 import { Link } from "react-router-dom";
 
-const sortModes = [
-  { key: 'original', label: 'Original' },
-  { key: 'type', label: 'Type' },
-  { key: 'force', label: 'Force' },
-  { key: 'name', label: 'Nom (a-z)' }
-];
+
 
 const ITEMS_PER_PAGE = 20;
 
 function Pokedex() {
-  const [pokemonList, setPokemonList] = useState([]);
-  const [originalList, setOriginalList] = useState([]);
+  
+  const [allPokemon, setAllPokemon] = useState([]);
+  
+  const [pokemonDetails, setPokemonDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortIndex, setSortIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  
   useEffect(() => {
-    const fetchPokemons = async () => {
+    const fetchAllPokemonNames = async () => {
+      setLoading(true);
       try {
         const res = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=1300');
-        const results = res.data.results;
+        setAllPokemon(res.data.results);
+      } catch (err) {
+        console.error('Erreur:', err);
+      }
+      setLoading(false);
+    };
 
-        const detailedPromises = results.map(p =>
+    fetchAllPokemonNames();
+  }, []);
+
+  
+  const filteredPokemon = useMemo(() =>
+    allPokemon.filter(pokemon =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [allPokemon, searchTerm]);
+
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredPokemon.length / ITEMS_PER_PAGE);
+
+  
+  useEffect(() => {
+    const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pokemonForPage = filteredPokemon.slice(offset, offset + ITEMS_PER_PAGE);
+
+    if (pokemonForPage.length === 0) {
+      setPokemonDetails([]);
+      return;
+    }
+
+    const fetchPageDetails = async () => {
+      setLoading(true);
+      try {
+        const detailedPromises = pokemonForPage.map(p =>
           axios.get(p.url).then(res => {
             const stats = res.data.stats;
             const totalStats = stats.reduce((sum, stat) => sum + stat.base_stat, 0);
-
             return {
               id: res.data.id,
               name: res.data.name,
-              image: res.data.sprites.front_default,
+              image: res.data.sprites.versions['generation-v']['black-white'].animated.front_default || res.data.sprites.front_default,
               type: res.data.types[0].type.name,
               totalStats: totalStats,
             };
           })
         );
-
-        const pokemons = await Promise.all(detailedPromises);
-        setPokemonList(pokemons);
-        setOriginalList(pokemons);
+        const detailedPokemons = await Promise.all(detailedPromises);
+        setPokemonDetails(detailedPokemons);
       } catch (err) {
         console.error('Erreur:', err);
       } finally {
@@ -52,39 +81,9 @@ function Pokedex() {
       }
     };
 
-    fetchPokemons();
-  }, []);
+    fetchPageDetails();
+  }, [currentPage, filteredPokemon]);
 
-  const handleSortToggle = () => {
-    const nextIndex = (sortIndex + 1) % sortModes.length;
-    setSortIndex(nextIndex);
-
-    const mode = sortModes[nextIndex].key;
-    let sorted = [...pokemonList];
-
-    if (mode === 'original') {
-      sorted = [...originalList];
-    } else if (mode === 'type') {
-      sorted.sort((a, b) => a.type.localeCompare(b.type));
-    } else if (mode === 'force') {
-      sorted.sort((a, b) => b.totalStats - a.totalStats);
-    } else if (mode === 'name') {
-      sorted.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    setPokemonList(sorted);
-    setCurrentPage(1);
-  };
-
-  const filteredList = pokemonList.filter(pokemon =>
-    pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
-  const currentItems = filteredList.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
 
   const changePage = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -92,11 +91,9 @@ function Pokedex() {
     }
   };
 
-  if (loading) return <p className="text-center mt-4">Chargement des Pokémon...</p>;
-
   return (
-    <div className="w-full bg-gradient-to-tr from-red-500 via-yellow-500 to-blue-500">
-      <h2 className="text-2xl font-bold mb-4 text-center">Pokédex</h2>
+    <div className="w-full bg-gradient-to-tr from-red-500 via-yellow-500 to-blue-500 min-h-screen pb-6">
+      <h2 className="text-2xl font-bold mb-4 text-center pt-4">Pokédex</h2>
 
       <div className="flex flex-col items-center gap-4 mb-4 justify-center ">
         <input
@@ -106,32 +103,32 @@ function Pokedex() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border border-gray-300 px-4 py-2 rounded-md shadow-md w-64"
         />
+      </div>
 
-        <button
-          onClick={handleSortToggle}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition duration-200"
-        >
-          Tri: {sortModes[sortIndex].label}
-        </button>
-      <div className="flex flex-wrap justify-center gap-4">
-  {currentItems.map(pokemon => (
-    <Link
-      to={`/pokemon/${pokemon.name}`}
-      key={pokemon.name}
-      style={{ display: "inline-block", width: "fit-content" }}
-    >
-      <PokemonCard pokemon={pokemon} />
-    </Link>
-  ))} 
-</div>
-        </div>
-    
-        <Pagination
+      {loading ? (
+        <p className="text-center mt-4">Chargement des Pokémon...</p>
+      ) : (
+        <>
+          <div className="flex flex-wrap justify-center gap-4 p-4">
+            {pokemonDetails.map(pokemon => (
+              <Link
+                to={`/pokemon/${pokemon.name}`}
+                key={pokemon.name}
+                style={{ display: "inline-block", width: "fit-content" }}
+              >
+                <PokemonCard pokemon={pokemon} />
+              </Link>
+            ))}
+          </div>
+
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onChangePage={changePage}
-        />
-        </div>
+          />
+        </>
+      )}
+    </div>
   );
 }
 
