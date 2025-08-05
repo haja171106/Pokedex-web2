@@ -29,3 +29,4 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
 }
 
 export default Pagination;
+

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Pokedex from "./components/Pokedex.jsx";
 import PokemonDetail from "./pages/PokemonDetail.jsx";
 
+import "./App.css";  // <-- IMPORTANT : importer ton CSS ici
+
 function App() {
   return (
     <Router>
@@ -15,3 +17,5 @@ function App() {
 }
 
 export default App;
+
+

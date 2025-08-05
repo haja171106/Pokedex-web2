@@ -1,5 +1,5 @@
-import React from 'react';
-import { Radar } from 'react-chartjs-2';
+import React from "react";
+import { Radar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -8,7 +8,7 @@ import {
   Filler,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
 ChartJS.register(
   RadialLinearScale,
@@ -20,17 +20,29 @@ ChartJS.register(
 );
 
 function PokemonStatsChart({ stats, color }) {
-  const statLabels = stats.map(stat => stat.stat.name.replace('special-attack', 'Sp. Atk').replace('special-defense', 'Sp. Def').replace('-', ' '));
-  const statValues = stats.map(stat => stat.base_stat);
+  const statLabels = stats.map((stat) =>
+    stat.stat.name
+      .replace("special-attack", "Sp. Atk")
+      .replace("special-defense", "Sp. Def")
+      .replace("-", " ")
+  );
+  const statValues = stats.map((stat) => stat.base_stat);
+
+  const backgroundColor = color ? `${color}40` : "rgba(34, 211, 238, 0.25)";
+  const borderColor = color || "rgba(34, 211, 238, 1)";
+  const pointColor = color || "rgba(34, 211, 238, 1)";
+  const labelColor = color || "#4B5563";
 
   const data = {
     labels: statLabels,
     datasets: [
       {
-        label: 'Statistiques de base',
+        label: "Statistiques de base",
         data: statValues,
-        backgroundColor: color ? `${color}80` : 'rgba(34, 211, 238, 0.5)', 
-        borderColor: color || 'rgba(34, 211, 238, 1)',
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        pointBackgroundColor: pointColor,
+        pointBorderColor: pointColor,
         borderWidth: 2,
       },
     ],
@@ -40,30 +52,30 @@ function PokemonStatsChart({ stats, color }) {
     scales: {
       r: {
         angleLines: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: borderColor,
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: borderColor,
         },
         pointLabels: {
-          color: '#4B5563', 
+          color: borderColor,
           font: {
             size: 14,
-            weight: 'bold',
-          }
+            weight: "bold",
+          },
         },
         ticks: {
-          color: '#4B5563',
-          backdropColor: 'rgba(255, 255, 255, 0.85)',
+          color: borderColor,
+          backdropColor: "transparent",
           stepSize: 50,
+          beginAtZero: true,
+          max: 150,
         },
-        suggestedMin: 0,
-        suggestedMax: 150,
       },
     },
     plugins: {
       legend: {
-        display: false, 
+        display: false,
       },
     },
     maintainAspectRatio: true,
